@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Your Profile - PhishGuard
+{% endblock %}
+
+{% block content %}
+  <div class="container mx-auto px-4 py-8">
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">Your Profile</h1>
+      
+      {% if messages %}
+        <div class="mb-6">
+          {% for message in messages %}
+            <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500{% else %}bg-blue-50 border-l-4 border-blue-500{% endif %} p-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  {% if message.tags == 'success' %}
+                    <svg class="h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  {% elif message.tags == 'error' %}
+                    <svg class="h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  {% else %}
+                    <svg class="h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                  {% endif %}
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm {% if message.tags == 'success' %}text-green-700{% elif message.tags == 'error' %}text-red-700{% else %}text-blue-700{% endif %}">{{ message }}</p>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-50 p-6 rounded-lg shadow-sm">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Account Information</h2>
+          <div class="space-y-4">
+            <div>
+              <p class="text-sm text-gray-500">Username</p>
+              <p class="text-lg font-medium">{{ user.username }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Email</p>
+              <p class="text-lg font-medium">{{ user.email|default:"Not provided" }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Date Joined</p>
+              <p class="text-lg font-medium">{{ profile.date_joined|date:"F j, Y" }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Organization</p>
+              <p class="text-lg font-medium">{{ profile.organization|default:"Not provided" }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Job Title</p>
+              <p class="text-lg font-medium">{{ profile.job_title|default:"Not provided" }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-gray-50 p-6 rounded-lg shadow-sm">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Settings</h2>
+          <form method="post">
+            {% csrf_token %}
+            <div class="space-y-4">
+              <div>
+                <label class="flex items-center">
+                  <input type="checkbox" name="email_notifications" {% if profile.email_notifications %}checked{% endif %} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                  <span class="ml-2 text-gray-700">Email Notifications</span>
+                </label>
+                <p class="text-sm text-gray-500 mt-1">Receive email alerts for suspicious activities</p>
+              </div>
+              
+              <div>
+                <label class="flex items-center">
+                  <input type="checkbox" name="enable_two_factor" {% if profile.enable_two_factor %}checked{% endif %} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                  <span class="ml-2 text-gray-700">Two-Factor Authentication</span>
+                </label>
+                <p class="text-sm text-gray-500 mt-1">Add an extra layer of security to your account</p>
+              </div>
+              
+              <div>
+                <label class="block text-gray-700">Scan History Retention</label>
+                <select name="scan_history_days" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                  <option value="7" {% if profile.scan_history_days == 7 %}selected{% endif %}>7 days</option>
+                  <option value="30" {% if profile.scan_history_days == 30 %}selected{% endif %}>30 days</option>
+                  <option value="90" {% if profile.scan_history_days == 90 %}selected{% endif %}>90 days</option>
+                  <option value="365" {% if profile.scan_history_days == 365 %}selected{% endif %}>1 year</option>
+                </select>
+                <p class="text-sm text-gray-500 mt-1">How long to keep your scan history</p>
+              </div>
+              
+              <div class="pt-4">
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                  Save Settings
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="mt-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Security Statistics</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Total Scans</h3>
+                <p class="text-2xl font-bold text-blue-600">{{ total_scans|default:"0" }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-red-50 p-4 rounded-lg">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
+                <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Threats Detected</h3>
+                <p class="text-2xl font-bold text-red-600">{{ threats_detected|default:"0" }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-green-50 p-4 rounded-lg">
+            <div class="flex items-center">
+              <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900">Last Scan</h3>
+                <p class="text-md font-bold text-green-600">{{ last_scan_date|default:"No scans yet" }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %} 

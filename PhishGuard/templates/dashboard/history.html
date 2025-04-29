@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Scan History - PhishGuard
+{% endblock %}
+
+{% block content %}
+  <div class="container mx-auto px-4 py-8">
+    <div class="bg-white shadow-md rounded-lg p-6">
+      <h1 class="text-3xl font-bold text-gray-800 mb-6">Your Scan History</h1>
+
+      {% if not url_scans and not email_analyses %}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-blue-700">You haven't performed any scans yet. Try scanning a URL or analyzing an email.</p>
+              <div class="mt-2 flex space-x-4">
+                <a href="{% url 'url_scanner:scan' %}" class="text-sm font-medium text-blue-700 hover:text-blue-900">Scan URL →</a>
+                <a href="{% url 'email_analyzer:analyze' %}" class="text-sm font-medium text-blue-700 hover:text-blue-900">Analyze Email →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <div class="mb-8">
+          <h2 class="text-2xl font-semibold text-gray-800 mb-4">URL Scans</h2>
+          {% if url_scans %}
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  {% for scan in url_scans %}
+                    <tr>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-xs">{{ scan.url }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ scan.scan_date|date:'M d, Y H:i' }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        {% if scan.is_phishing %}
+                          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Phishing</span>
+                        {% elif scan.is_phishing == False %}
+                          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Safe</span>
+                        {% else %}
+                          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Unknown</span>
+                        {% endif %}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {% if scan.confidence_score %}
+                          {{ scan.confidence_score|floatformat:2 }}%
+                        {% else %}
+                          N/A
+                        {% endif %}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <a href="{% url 'url_scanner:results' scan_id=scan.id %}" class="text-blue-600 hover:text-blue-900">View Details</a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-gray-600">No URL scans found.</p>
+          {% endif %}
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-semibold text-gray-800 mb-4">Email Analyses</h2>
+          {% if email_analyses %}
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sender</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  {% for analysis in email_analyses %}
+                    <tr>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 truncate max-w-xs">{{ analysis.email_subject }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate max-w-xs">{{ analysis.email_sender }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ analysis.analysis_date|date:'M d, Y H:i' }}</td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        {% if analysis.is_phishing %}
+                          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">Phishing</span>
+                        {% elif analysis.is_phishing == False %}
+                          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Safe</span>
+                        {% else %}
+                          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">Unknown</span>
+                        {% endif %}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {% if analysis.confidence_score %}
+                          {{ analysis.confidence_score|floatformat:2 }}%
+                        {% else %}
+                          N/A
+                        {% endif %}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <a href="{% url 'email_analyzer:results' analysis_id=analysis.id %}" class="text-blue-600 hover:text-blue-900">View Details</a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-gray-600">No email analyses found.</p>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

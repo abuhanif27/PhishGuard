@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Email Analysis Results - PhishGuard
+{% endblock %}
+
+{% block content %}
+  <div class="bg-white shadow-md rounded-lg p-6 mb-8">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-800 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-3 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>Email Analysis Results
+      </h1>
+
+      <a href="{% url 'email_analyzer:analyze' %}" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md">Analyze Another Email</a>
+    </div>
+
+    <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div class="mb-3 md:mb-0">
+          <h2 class="text-lg font-semibold text-gray-800">Email Information:</h2>
+          <div class="mt-2 space-y-1">
+            <p>
+              <span class="font-medium">From:</span> {{ analysis.email_sender }}
+            </p>
+            <p>
+              <span class="font-medium">Subject:</span> {{ analysis.email_subject }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-center">
+          {% if analysis.is_phishing == None %}
+            <span class="inline-block mb-2 px-4 py-2 rounded-full text-lg font-bold phish-warning">Unknown</span>
+          {% elif analysis.is_phishing %}
+            <span class="inline-block mb-2 px-4 py-2 rounded-full text-lg font-bold phish-danger">Phishing Detected</span>
+          {% else %}
+            <span class="inline-block mb-2 px-4 py-2 rounded-full text-lg font-bold phish-safe">Likely Safe</span>
+          {% endif %}
+
+          {% if analysis.confidence_score != None %}
+            <div class="text-sm text-gray-600">Confidence: {{ analysis.confidence_score|floatformat:2 }} / 1.00</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="mt-3 text-sm text-gray-500">
+        Analysis performed on {{ analysis.analysis_date|date:'F j, Y' }} at {{ analysis.analysis_date|time:'H:i:s' }}
+        {% if analysis.user %}
+          by {{ analysis.user.username }}
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mb-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Analysis Details</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <h3 class="font-medium text-gray-700 mb-3">Link & URL Analysis</h3>
+
+          <ul class="space-y-3">
+            <li class="flex items-start">
+              {% if analysis.has_suspicious_links %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              {% endif %}
+              <div>
+                <span class="font-medium">Suspicious Links:</span>
+                <span>{{ analysis.has_suspicious_links|yesno:'Detected,None Found' }}</span>
+                {% if analysis.has_suspicious_links and analysis.suspicious_links %}
+                  <div class="text-xs text-red-600 mt-1 break-words">
+                    {% for link in analysis.suspicious_links.split|slice:':3' %}
+                      {{ link }}<br />
+                    {% endfor %}
+                    {% if analysis.suspicious_links.split|length > 3 %}
+                      <span class="italic">({{ analysis.suspicious_links.split|length|add:'-3' }} more links not shown)</span>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            </li>
+
+            <li class="flex items-start">
+              {% if analysis.has_urgent_language %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              {% endif %}
+              <div>
+                <span class="font-medium">Urgent Language:</span>
+                <span>{{ analysis.has_urgent_language|yesno:'Detected,None Found' }}</span>
+                {% if analysis.has_urgent_language and analysis.urgent_phrases %}
+                  <div class="text-xs text-red-600 mt-1">Phrases: {{ analysis.urgent_phrases }}</div>
+                {% endif %}
+              </div>
+            </li>
+
+            <li class="flex items-start">
+              {% if analysis.has_misspellings %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              {% endif %}
+              <div>
+                <span class="font-medium">Misspellings:</span>
+                <span>{{ analysis.has_misspellings|yesno:'Detected,None Found' }}</span>
+                {% if analysis.has_misspellings and analysis.misspelled_words %}
+                  <div class="text-xs text-yellow-600 mt-1">Examples: {{ analysis.misspelled_words }}</div>
+                {% endif %}
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <h3 class="font-medium text-gray-700 mb-3">Sender & Attachment Analysis</h3>
+
+          <ul class="space-y-3">
+            <li class="flex items-start">
+              {% if analysis.has_spoofed_sender %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              {% endif %}
+              <div>
+                <span class="font-medium">Sender Authenticity:</span>
+                {% if analysis.has_spoofed_sender %}
+                  <span class="text-red-600 font-medium">Likely spoofed</span>
+                {% else %}
+                  <span>No spoofing detected</span>
+                {% endif %}
+              </div>
+            </li>
+
+            <li class="flex items-start">
+              {% if analysis.has_suspicious_attachments %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              {% endif %}
+              <div>
+                <span class="font-medium">Suspicious Attachments:</span>
+                <span>{{ analysis.has_suspicious_attachments|yesno:'Detected,None Found' }}</span>
+                {% if analysis.has_suspicious_attachments and analysis.suspicious_attachments %}
+                  <div class="text-xs text-red-600 mt-1">Files: {{ analysis.suspicious_attachments }}</div>
+                {% endif %}
+              </div>
+            </li>
+
+            <li class="flex items-start">
+              {% if analysis.sender_in_blacklist %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+              {% elif analysis.sender_in_whitelist %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              {% else %}
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                </svg>
+              {% endif %}
+              <div>
+                <span class="font-medium">Sender Reputation:</span>
+                {% if analysis.sender_in_blacklist %}
+                  <span class="text-red-600 font-medium">Sender in blacklist</span>
+                {% elif analysis.sender_in_whitelist %}
+                  <span class="text-green-600 font-medium">Sender in whitelist</span>
+                {% else %}
+                  <span>Sender not in our database</span>
+                {% endif %}
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-200 pt-6">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Email Content Preview</h2>
+
+      <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 mb-6">
+        <div class="mb-2">
+          <span class="font-medium">From:</span> {{ analysis.email_sender }}
+        </div>
+        <div class="mb-2">
+          <span class="font-medium">Subject:</span> {{ analysis.email_subject }}
+        </div>
+        <div class="border-t border-gray-200 pt-3 mt-3">
+          <div class="text-gray-700 max-h-64 overflow-y-auto">{{ analysis.email_body|linebreaks }}</div>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-200 pt-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Our Recommendation</h2>
+
+        {% if analysis.is_phishing %}
+          <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">Warning: This email is likely a phishing attempt</h3>
+                <div class="mt-2 text-sm text-red-700">
+                  <p>We recommend that you do not respond to this email or click any links it contains. It shows multiple characteristics of a phishing email and may attempt to steal your personal information.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <ul class="space-y-2 text-gray-700">
+            <li class="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              <span>Do not click on any links or download any attachments in this email.</span>
+            </li>
+            <li class="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              <span>Do not respond to the sender or provide any personal information.</span>
+            </li>
+            <li class="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              <span>Report this email as phishing to your email provider or IT department.</span>
+            </li>
+            <li class="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+              <span>If the email claims to be from a company you do business with, contact them directly through their official website or phone number to verify.</span>
+            </li>
+          </ul>
+        {% elif analysis.is_phishing == False %}
+          <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-green-800">This email appears to be legitimate</h3>
+                <div class="mt-2 text-sm text-green-700">
+                  <p>Our analysis did not detect any significant phishing indicators. The email appears to be legitimate based on our analysis.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-gray-700">
+            <p>While this email passed our security checks, always remain vigilant:</p>
+            <ul class="mt-2 space-y-2">
+              <li class="flex items-start">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span>Verify the sender's identity before responding with sensitive information.</span>
+              </li>
+              <li class="flex items-start">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span>Be cautious about clicking links, especially if they ask for personal information.</span>
+              </li>
+              <li class="flex items-start">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span>Trust your instincts. If something seems suspicious, it's better to err on the side of caution.</span>
+              </li>
+            </ul>
+          </div>
+        {% else %}
+          <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-yellow-800">Unable to determine if this email is safe</h3>
+                <div class="mt-2 text-sm text-yellow-700">
+                  <p>We couldn't complete a full analysis of this email. This could be due to insufficient content or technical problems.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-gray-700">
+            <p>We recommend exercising caution:</p>
+            <ul class="mt-2 space-y-2">
+              <li class="flex items-start">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span>Try analyzing the email again with more complete content.</span>
+              </li>
+              <li class="flex items-start">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span>Treat any unexpected or suspicious email with caution.</span>
+              </li>
+              <li class="flex items-start">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500 mr-2 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span>If the email is important, verify its legitimacy with the sender through an alternate communication channel.</span>
+              </li>
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if user.is_authenticated %}
+    <div class="mt-4 text-center">
+      <a href="{% url 'dashboard:history' %}" class="text-purple-600 hover:text-purple-800 font-medium">View Your Analysis History</a>
+    </div>
+  {% endif %}
+{% endblock %}

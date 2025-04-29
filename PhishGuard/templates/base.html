@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}
+        PhishGuard - AI-Powered Phishing Detection
+      {% endblock %}
+    </title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom styles -->
+    <style>
+      .phish-safe {
+        background-color: #d1fae5;
+        color: #065f46;
+      }
+      
+      .phish-danger {
+        background-color: #fee2e2;
+        color: #b91c1c;
+      }
+      
+      .phish-warning {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+    </style>
+
+    {% block extra_css %}
+
+    {% endblock %}
+  </head>
+  <body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-blue-800 text-white shadow-md">
+      <div class="container mx-auto px-4 py-3">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center space-x-4">
+            <a href="{% url 'home' %}" class="text-2xl font-bold flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>PhishGuard
+            </a>
+            <div class="hidden md:flex space-x-4">
+              <a href="{% url 'url_scanner:scan' %}" class="hover:text-blue-200 px-3 py-2 rounded-md">URL Scanner</a>
+              <a href="{% url 'email_analyzer:analyze' %}" class="hover:text-blue-200 px-3 py-2 rounded-md">Email Analyzer</a>
+              <a href="{% url 'dashboard:history' %}" class="hover:text-blue-200 px-3 py-2 rounded-md">Scan History</a>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            {% if user.is_authenticated %}
+              <a href="{% url 'dashboard:profile' %}" class="hover:text-blue-200 px-3 py-2 rounded-md">Profile</a>
+              <form method="post" action="{% url 'logout' %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="bg-blue-700 hover:bg-blue-600 px-3 py-2 rounded-md">Logout</button>
+              </form>
+            {% else %}
+              <a href="{% url 'login' %}" class="hover:text-blue-200 px-3 py-2 rounded-md">Login</a>
+              <a href="{% url 'admin:index' %}" class="bg-blue-700 hover:bg-blue-600 px-3 py-2 rounded-md">Admin</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Mobile menu -->
+    <div class="md:hidden bg-blue-700 text-white">
+      <div class="container mx-auto px-4 py-2 flex justify-center space-x-4">
+        <a href="{% url 'url_scanner:scan' %}" class="hover:text-blue-200 px-2 py-1">URL Scanner</a>
+        <a href="{% url 'email_analyzer:analyze' %}" class="hover:text-blue-200 px-2 py-1">Email Analyzer</a>
+        <a href="{% url 'dashboard:history' %}" class="hover:text-blue-200 px-2 py-1">History</a>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+      <div class="container mx-auto px-4 py-2">
+        {% for message in messages %}
+          <div class="p-4 mb-4 rounded-md {% if message.tags == 'success' %}
+              
+              
+              
+              
+              bg-green-100 text-green-800
+
+
+
+
+            {% elif message.tags == 'error' %}
+              
+              
+              
+              
+              bg-red-100 text-red-800
+
+
+
+
+            {% else %}
+              
+              
+              
+              
+              bg-blue-100 text-blue-800
+
+
+
+
+            {% endif %}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Main content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+      {% block content %}
+
+      {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6">
+      <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between items-center">
+          <div class="mb-4 md:mb-0">
+            <p>
+              &copy;{% now 'Y' %}PhishGuard - AI-Powered Phishing Detection
+            </p>
+          </div>
+          <div class="flex space-x-4">
+            <a href="#" class="hover:text-blue-300">About</a>
+            <a href="#" class="hover:text-blue-300">Privacy Policy</a>
+            <a href="#" class="hover:text-blue-300">Terms of Service</a>
+            <a href="#" class="hover:text-blue-300">Contact</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    {% block extra_js %}
+
+    {% endblock %}
+  </body>
+</html>
